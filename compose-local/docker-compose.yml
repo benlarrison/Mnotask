@@ -1,0 +1,83 @@
+version: '3'
+services:
+  db-userauth:
+    image: "mysql/mysql-server:8.0"
+    container_name: db-userauth
+    command: [ "mysqld",
+      "--character-set-server=utf8mb4",
+      "--bind-address=0.0.0.0",
+      "--socket=/tmp/mysql.sock" ]
+    expose:
+      - "3306"
+    networks:
+      - authnet
+    volumes:
+      - db-userauth-data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: "rootPass"
+      MYSQL_USER: userauth
+      MYSQL_PASSWORD: userPass
+      MYSQL_DATABASE: userauth
+      
+  svc-userauth:
+    build: ../users
+    container_name: svc-userauth
+    depends_on:
+      - db-userauth
+    networks:
+      - authnet
+    # DO NOT EXPOSE THIS PORT ON PRODUCTION
+    ports:
+      - "5858:5858"
+
+  db-notes:
+    image: "mysql/mysql-server:8.0"
+    container_name: db-notes
+    command: [  "mysqld",
+      "--character-set-server=utf8mb4",
+      "--collation-server=utf8mb4_unicode_ci",
+      "--bind-address=0.0.0.0",
+      "--socket=/tmp/mysql.sock" ]
+    expose:
+      - "3306"
+    networks:
+      - frontnet
+    volumes:
+      - db-notes-data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: "rootPass"
+      MYSQL_USER: notes
+      MYSQL_PASSWORD: userpass
+      MYSQL_DATABASE: notes
+
+  svc-notes:
+    build: ../notes
+    container_name: svc-notes
+    depends_on:
+      - db-notes
+      - redis
+    networks:
+      - frontnet
+      - authnet
+    ports:
+      - "3000:3000"
+    environment:
+      REDIS_ENDPOINT: "redis"
+
+  redis:
+    image: "redis:5.0"
+    networks:
+      - frontnet
+
+networks:
+  frontnet:
+    driver: bridge
+  authnet:
+    driver: bridge
+    
+volumes:
+  db-userauth-data:
+  db-notes-data:
+
+
+

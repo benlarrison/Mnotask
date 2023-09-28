@@ -1,0 +1,30 @@
+<div class="container-fluid">
+    <br>
+    <div class="row">
+        <div class="col-12 btn-grip-vertical" id="notetitles" role="group">
+
+        {{> footerjs}}
+        <!-- the Socket.IO library sets up the route for the /socket.io URL -->
+        <script src="/socket.io/socket.io.js"></script>
+        <script>
+        console.log("Load socket when ready...");
+        $(document).ready(function () {
+            var socket = io('/home');
+            socket.on('connect', socket => {
+                console.log('socketio connection on /home');
+            });
+            socket.on('notetitles', function(data) {
+                var notelist = data.notelist;
+                $('#notetitles').empty();
+                for (var i = 0; i < notelist.length; i++) {
+                    notedata = notelist[i];
+                    $('#notetitles')
+                    .append('<a class="btn btn-lag btn-block btn-outline-light" href="/notes/view?key='+ notedata.key +'">'+ notedata.title +'</a>');
+                }
+            });
+        });
+        </script>
+
+        </div>
+    </div>
+</div>

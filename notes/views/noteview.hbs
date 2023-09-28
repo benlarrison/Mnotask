@@ -1,0 +1,136 @@
+<style>
+    .box {
+        padding: 20px;
+    }
+    .center-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    
+    }
+</style>
+<div class="center-wrapper">
+    <div class="box">
+        <div class="container-fluid">
+            <div class="row"><div class="col-xs-12">
+                {{#if note}}<h3 id="notetitle">{{ note.title }}</h3>{{/if}}
+                {{#if note}}<p id="notebody">{{ note.body }}</p>{{/if}}
+                <p>Key: {{ notekey }}</p>
+            </div></div>
+                <div class="row"><div class="col-xs-12">
+                <div class="btn-group">
+                    <button type="button" class="btn btn-outline-light" data-toggle="modal" data-target="#notes-comment-modal">Comment</button>
+                </div>
+                <div style="padding: 5px;"></div>
+                <div id="noteMessages">
+                    {{#if messages}}
+                        {{#each messages}}
+                        <div style="padding: 5px;">
+                            <div id="note-message-{{ id }}" class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ from }}</h5>
+                                    <div class="card-text">{{ message }} <small style="display: block">{{ timestamp }}</small>
+                                    </div>
+                                    <div style="padding: 5px;"></div>
+                                </div>
+                            </div>
+                        </div>
+                        {{/each}}
+                    {{/if}}
+                </div>
+
+            </div></div>
+            
+        </div>
+
+        {{#if notekey}}
+        <div class="modal fade" id="notes-comment-modal" tabindex="-1" role="dialog" aria-labelledby="NoteCommentModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <style>
+                            .modal-header {
+                                background-color: #343a40;
+                                color: #fff;
+                            }
+                            .card {
+                                background-color: #343a40;
+                                color: #fff;
+                            }
+                        </style>
+                        <h5 class="modal-title modal-header" id="noteCommentModalLabel">Leave a Comment</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    </div>
+                    
+                    <div class="modal-body">
+                        <form id="submit-comment">
+                            <input id="comment-from" type="hidden" name="from" value={{ user.id }}>
+                            <input id="comment-namespace" type="hidden" name="namespace" value="/notes">
+                            <input id="comment-room" type="hidden" name="room" value="{{ notekey }}">
+                            <input id="comment-key" type="hidden" name="key" value="{{ notekey }}">
+                            <fieldset>
+                                <div class="form-group">
+                                    <label for="noteCommentTextArea">Your Excellent Thoughts</label>
+                                    <textarea id="noteCommentTextArea" name="message" class="form-control" rows="3"></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <button id="submitNewComment" type="submit" class="btn btn-primary col-sm-offset-2 col-sm-10">Make Comment</button>
+                                </div>
+                            <fieldset>
+                        </form>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{{/if}}
+
+
+
+{{> footerjs}}
+
+{{#if notekey }}
+<script src="/socket.io/socket.io.js"></script>
+<script>
+$(document).ready(function () {
+    let socket = io('/notes', {
+        query: { key: '{{ notekey }}' }
+    });
+    socket.on('noteupdated', note => {
+        $('h3#notetitle').empty();
+        $('h3#notetitle').text(note.title);
+        $('#navbartitle').empty();
+        $('#navbartitle').text(note.title);
+        $('#notebody').empty();
+        $('#notebody').text(note.body);
+    });
+
+    socket.on('destroymessage', data => {
+        $('#note-message-'+data.id).remove();
+    });
+
+    socket.on('notedestroyed', key => {
+        window.location.href = "/";
+    });
+
+    {{#if user}}
+    $('#submitNewComment').on('click', function(event) {
+        socket.emit('create-message', {
+            from: $('#comment-from').val(),
+            namespace: $('#comment-namespace').val(),
+            room: $('#comment-room').val(),
+            key: $('#comment-key').val(),
+            message: $('#noteCommentTextArea').val()
+        },
+        function (result) {
+            $('#notes-comment-modal').modal('hide');
+            $('#noteCommentTextArea').empty();
+        });
+    });
+    {{/if}}
+
+});
+</script>
+{{/if}}
