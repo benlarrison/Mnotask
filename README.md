@@ -1,7 +1,7 @@
 # Mnotask
 Mnotask is an online note sharing website.  You can log in with Twitter in seconds and make a post in no time.  The site also supports live updates and comments.  
 
-The site is live: [Mnotask](https://mnotask.com)
+
 # Local Deployment
 Launch the notes web app and user-login REST service using a local machine (macOS, win, Linux).  Install Node.js and launch the files found in the notes folder and users-local folder
 
